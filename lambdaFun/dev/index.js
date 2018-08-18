@@ -88,7 +88,7 @@ exports.handler = (event, context) => {
         const name = request.intent.slots.FirstName.value;
         const audioSample = "<audio src='https://s3.amazonaws.com/ask-soundlibrary/human/amzn_sfx_large_crowd_cheer_03.mp3'/>";
         const options = {
-          speechText: `${timeOfDay()} ${name}, your name is spelled <say-as interpret-as="spell-out>${name}</say-as> ${audioSample}`,
+          speechText: `${timeOfDay()} ${name}, your name is spelled <say-as interpret-as="spell-out">${name}</say-as> ${audioSample}`,
           endSession: true,
         };
 
