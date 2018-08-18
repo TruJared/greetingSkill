@@ -9,8 +9,8 @@ exports.handler = (event, context) => {
       version: '1.0',
       response: {
         outputSpeech: {
-          type: 'PlainText',
-          text: options.speechText,
+          type: 'SSML',
+          ssml: `<speak>${options.speechText}</speak>`,
         },
         shouldEndSession: options.endSession,
       },
@@ -19,8 +19,8 @@ exports.handler = (event, context) => {
     if (options.repromptText) {
       response.response.reprompt = {
         outputSpeech: {
-          type: 'PlainText',
-          text: options.repromptText,
+          type: 'SSML',
+          ssml: `<speak>${options.repromptText}</speak>`,
         },
       };
     }
@@ -42,7 +42,7 @@ exports.handler = (event, context) => {
     if (hours < 12) {
       return 'Good morning';
     }
-    if (hours < 18) {
+    if (hours <= 17) {
       return 'Good afternoon';
     }
     return 'Good evening';
@@ -86,8 +86,9 @@ exports.handler = (event, context) => {
     } else if (request.type === 'IntentRequest') {
       if (request.intent.name === 'HelloIntent') {
         const name = request.intent.slots.FirstName.value;
+        const audioSample = "<audio src='https://s3.amazonaws.com/ask-soundlibrary/human/amzn_sfx_large_crowd_cheer_03.mp3'/>";
         const options = {
-          speechText: `${timeOfDay()} ${name}`,
+          speechText: `${timeOfDay()} ${name}, your name is spelled <say-as interpret-as="spell-out>${name}</say-as> ${audioSample}`,
           endSession: true,
         };
 
@@ -96,7 +97,7 @@ exports.handler = (event, context) => {
           if (err) {
             context.fail(err);
           } else {
-            options.speechText += `. Here is a cool quote for you... ${quote}`;
+            options.speechText += `Here is a cool quote for you... ${quote}`;
             // send voice output
             context.succeed(buildResponse(options));
           }
