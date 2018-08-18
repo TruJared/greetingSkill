@@ -24,6 +24,10 @@ exports.handler = (event, context) => {
         },
       };
     }
+
+    if (options.session && options.session.attributes) {
+      response.sessionAttributes = options.session.attributes;
+    }
     return response;
   };
 
@@ -71,40 +75,105 @@ exports.handler = (event, context) => {
     });
   };
 
+  // handle launch request
+  const handleLaunchRequest = (context) => {
+    const options = {
+      speechText:
+        'Welcome to greetings skill. With this skill you can greet your guests. Whom would you like to greet? ',
+      repromptText: 'You can say, for example, say hello to John.',
+      endSession: false,
+    };
+
+    context.succeed(buildResponse(options));
+  };
+
+  // handle hello intent
+  const handleHelloIntent = (request, context) => {
+    const name = request.intent.slots.FirstName.value;
+    const audioSample = "<audio src='https://s3.amazonaws.com/ask-soundlibrary/human/amzn_sfx_large_crowd_cheer_03.mp3'/>";
+    const options = {
+      speechText: `${timeOfDay()} ${name}, your name is spelled <say-as interpret-as="spell-out">${name}</say-as> ${audioSample}`,
+      endSession: true,
+    };
+    // get quote
+    getQuote((quote, err) => {
+      if (err) {
+        context.fail(err);
+      } else {
+        options.speechText += `Here is a cool quote for you... ${quote}`;
+        // send voice output
+        context.succeed(buildResponse(options));
+      }
+    });
+  };
+  // handle quote and next quote
+  const handleQuoteIntent = (request, context, session) => {
+    const options = {
+      reprompt: 'You can say yes or no.',
+      session,
+    };
+    // get quote
+    getQuote((quote, err) => {
+      if (err) {
+        context.fail(err);
+      } else {
+        options.speechText += `Here is a cool quote for you... ${quote}. Would you like to hear another quote?`;
+        options.session.attributes.quoteIntent = true;
+        options.endSession = false;
+        // send voice output
+        context.succeed(buildResponse(options));
+      }
+    });
+  };
+  const handleNextQuoteIntent = (request, context, session) => {
+    const options = {
+      reprompt: 'You can say yes or no.',
+      session,
+    };
+
+    if (session.attributes.quoteIntent) {
+      // get quote
+      getQuote((quote, err) => {
+        if (err) {
+          context.fail(err);
+        } else {
+          options.speechText += `Here is a cool quote for you... ${quote}. Would you like to hear another quote?`;
+          options.session.attributes.quoteIntent = true;
+          options.endSession = false;
+
+          // send voice output
+          context.succeed(buildResponse(options));
+        }
+      });
+    } else {
+      options.speechText += 'Wrong invocation of this intent';
+      options.endSession = true;
+    }
+  };
+
+  // main program
   try {
     const { request } = event;
+    const { session } = event;
+
+    // check for event session and create if NOT exist
+    if (!session.attributes) {
+      session.attributes = {};
+    }
+
     // request types
     if (request.type === 'LaunchRequest') {
-      const options = {
-        speechText:
-          'Welcome to greetings skill. With this skill you can greet your guests. Whom would you like to greet? ',
-        repromptText: 'You can say, for example, say hello to John.',
-        endSession: false,
-      };
-
-      context.succeed(buildResponse(options));
+      handleLaunchRequest(context);
     } else if (request.type === 'IntentRequest') {
       if (request.intent.name === 'HelloIntent') {
-        const name = request.intent.slots.FirstName.value;
-        const audioSample = "<audio src='https://s3.amazonaws.com/ask-soundlibrary/human/amzn_sfx_large_crowd_cheer_03.mp3'/>";
-        const options = {
-          speechText: `${timeOfDay()} ${name}, your name is spelled <say-as interpret-as="spell-out">${name}</say-as> ${audioSample}`,
-          endSession: true,
-        };
-
-        // get quote
-        getQuote((quote, err) => {
-          if (err) {
-            context.fail(err);
-          } else {
-            options.speechText += `Here is a cool quote for you... ${quote}`;
-            // send voice output
-            context.succeed(buildResponse(options));
-          }
-        });
+        handleHelloIntent(request, context);
       } else {
         context.fail('Unknown intent type');
       }
+    } else if (request.type === 'QuoteIntent') {
+      handleQuoteIntent(request, context, session);
+    } else if (request.type === 'NextQuoteIntent') {
+      handleNextQuoteIntent(request, context, session);
     } else if (request.type === 'SessionRequest') {
     } else {
       throw new Error('Unknown intent type');

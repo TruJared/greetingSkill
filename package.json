@@ -6,7 +6,7 @@
   "author": "",
   "license": "ISC",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "lambda-local -l ./lambdaFun/prod/index.js -h handler -e ./lambdaFun/dev/event.json",
     "build": "babel ./lambdaFun/dev -d ./lambdaFun/prod",
     "watch": "babel ./lambdaFun/dev --watch -d ./lambdaFun/prod"
   },
