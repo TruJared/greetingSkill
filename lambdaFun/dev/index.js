@@ -1,10 +1,10 @@
 const https = require('https');
 
 // cool comments
-// ! wow
-// * note to self
-// ? whaaaaat?
-// todo delete the above helper comments...
+// // ! wow
+// // * note to self
+// // ? whaaaaat?
+// // todo delete the above helper comments...
 
 exports.handler = (event, context) => {
   // -- FUNCTIONS -- //
@@ -29,6 +29,28 @@ exports.handler = (event, context) => {
           ssml: `<speak>${options.repromptText}</speak>`,
         },
       };
+    }
+
+    if (options.cardTitle) {
+      response.response.card = {
+        type: 'Simple',
+        title: options.cardTitle,
+      };
+
+      if (options.imageUrl) {
+        response.response.card = {
+          type: 'Standard',
+          title: options.cardTitle,
+        };
+        response.response.card.text = options.cardContent;
+        response.response.card.image = {
+          smallImageUrl: options.imageUrl,
+          largeImageUrl: options.imageUrl,
+          // * generally you would want different urls for each image size
+        };
+      } else {
+        response.response.card.text = options.cardContent;
+      }
     }
 
     if (options.session && options.session.attributes) {
@@ -99,6 +121,8 @@ exports.handler = (event, context) => {
     const audioSample = "<audio src='https://s3.amazonaws.com/ask-soundlibrary/human/amzn_sfx_large_crowd_cheer_03.mp3'/>";
     const options = {
       speechText: `${timeOfDay()} ${name}, your name is spelled <say-as interpret-as="spell-out">${name}</say-as> ${audioSample}`,
+      cardTitle: `${timeOfDay()} ${name}`,
+      imageUrl: 'https://picsum.photos/720/480/?random',
       endSession: true,
     };
     // get quote
@@ -107,18 +131,19 @@ exports.handler = (event, context) => {
         context.fail(err);
       } else {
         options.speechText += `Here is a cool quote for you... ${quote}`;
+        options.cardContent = quote;
         // send voice output
         context.succeed(buildResponse(options));
       }
     });
   };
   // handle quote and next quote
-  // TODO fix bug with reprompt //
+  // // TODO fix bug with reprompt //
   const handleQuoteIntent = (request, context, session) => {
     const options = {
       // clears speechText
       speechText: '',
-      reprompt: 'You can say yes or no.',
+      repromptText: 'You can say yes or stop.',
       session,
     };
     // get quote
@@ -138,7 +163,7 @@ exports.handler = (event, context) => {
     const options = {
       // clears speechText
       speechText: '',
-      reprompt: 'You can say yes or no.',
+      repromptText: 'You can say yes or stop.',
       session,
     };
 
@@ -151,7 +176,6 @@ exports.handler = (event, context) => {
           options.speechText += `Here is a cool quote for you... ${quote}. Would you like to hear another quote? You can say yes or stop.`;
           options.session.attributes.quoteIntent = true;
           options.endSession = false;
-
           // send voice output
           context.succeed(buildResponse(options));
         }
