@@ -1,11 +1,5 @@
 const https = require('https');
 
-// cool comments
-// // ! wow
-// // * note to self
-// // ? whaaaaat?
-// // todo delete the above helper comments...
-
 exports.handler = (event, context) => {
   // -- FUNCTIONS -- //
 
@@ -188,6 +182,11 @@ exports.handler = (event, context) => {
 
   // main program
   try {
+    // console.log(JSON.stringify(event, null, 2));
+    console.dir(event, { depth: null, colors: true });
+    console.error('this is an error');
+    console.warn('warning');
+
     const { request } = event;
     const { session } = event;
 

@@ -6,11 +6,13 @@
   "author": "",
   "license": "ISC",
   "scripts": {
-    "test": "lambda-local -l ./lambdaFun/prod/index.js -h handler -e ./lambdaFun/dev/event.json",
+    "test": "lambda-local -l ./lambdaFun/dev/index.js -h handler -e ./lambdaFun/dev/event.json",
     "build": "babel ./lambdaFun/dev -d ./lambdaFun/prod",
     "watch": "babel ./lambdaFun/dev --watch -d ./lambdaFun/prod"
   },
-  "dependencies": {},
+  "dependencies": {
+    "babel-plugin-transform-remove-console": "^6.9.4"
+  },
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-preset-env": "^1.7.0",
