@@ -182,10 +182,8 @@ exports.handler = (event, context) => {
 
   // main program
   try {
-    // console.log(JSON.stringify(event, null, 2));
+    // sample dev log for testing
     console.dir(event, { depth: null, colors: true });
-    console.error('this is an error');
-    console.warn('warning');
 
     const { request } = event;
     const { session } = event;
