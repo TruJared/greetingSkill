@@ -1,5 +1,11 @@
 const https = require('https');
 
+// cool comments
+// ! wow
+// * note to self
+// ? whaaaaat?
+// todo delete the above helper comments...
+
 exports.handler = (event, context) => {
   // -- FUNCTIONS -- //
 
@@ -80,7 +86,7 @@ exports.handler = (event, context) => {
     const options = {
       speechText:
         'Welcome to greetings skill. With this skill you can greet your guests. Whom would you like to greet? ',
-      repromptText: 'You can say, for example, say hello to John.',
+      repromptText: 'You can say, for example, greet John.',
       endSession: false,
     };
 
@@ -107,8 +113,11 @@ exports.handler = (event, context) => {
     });
   };
   // handle quote and next quote
+  // TODO fix bug with reprompt //
   const handleQuoteIntent = (request, context, session) => {
     const options = {
+      // clears speechText
+      speechText: '',
       reprompt: 'You can say yes or no.',
       session,
     };
@@ -117,7 +126,7 @@ exports.handler = (event, context) => {
       if (err) {
         context.fail(err);
       } else {
-        options.speechText += `Here is a cool quote for you... ${quote}. Would you like to hear another quote?`;
+        options.speechText += `Here is a cool quote for you... ${quote}. Would you like to hear another quote? You can say yes or stop`;
         options.session.attributes.quoteIntent = true;
         options.endSession = false;
         // send voice output
@@ -127,6 +136,8 @@ exports.handler = (event, context) => {
   };
   const handleNextQuoteIntent = (request, context, session) => {
     const options = {
+      // clears speechText
+      speechText: '',
       reprompt: 'You can say yes or no.',
       session,
     };
@@ -137,7 +148,7 @@ exports.handler = (event, context) => {
         if (err) {
           context.fail(err);
         } else {
-          options.speechText += `Here is a cool quote for you... ${quote}. Would you like to hear another quote?`;
+          options.speechText += `Here is a cool quote for you... ${quote}. Would you like to hear another quote? You can say yes or stop.`;
           options.session.attributes.quoteIntent = true;
           options.endSession = false;
 
@@ -167,13 +178,23 @@ exports.handler = (event, context) => {
     } else if (request.type === 'IntentRequest') {
       if (request.intent.name === 'HelloIntent') {
         handleHelloIntent(request, context);
+      } else if (request.intent.name === 'QuoteIntent') {
+        handleQuoteIntent(request, context, session);
+      } else if (request.intent.name === 'NextQuoteIntent') {
+        handleNextQuoteIntent(request, context, session);
+      } else if (
+        request.intent.name === 'AMAZON.StopIntent'
+        || request.intent.name === 'AMAZON.CancelIntent'
+      ) {
+        context.succeed(
+          buildResponse({
+            speechText: 'Goodbye',
+            endSession: true,
+          }),
+        );
       } else {
         context.fail('Unknown intent type');
       }
-    } else if (request.type === 'QuoteIntent') {
-      handleQuoteIntent(request, context, session);
-    } else if (request.type === 'NextQuoteIntent') {
-      handleNextQuoteIntent(request, context, session);
     } else if (request.type === 'SessionRequest') {
     } else {
       throw new Error('Unknown intent type');

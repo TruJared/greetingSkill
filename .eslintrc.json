@@ -5,8 +5,9 @@
     "node": true
   },
   "rules": {
-    "linebreak-style": 0,
     "func-names": 0,
+    "linebreak-style": 0,
+    "no-shadow": 0,
     "strict": 0
   }
 }
